@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion,ObjectId } = require('mongodb');
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 7000;
@@ -22,6 +22,9 @@ async function run(){
     try{
         await client.connect();
         const productCollection = client.db('pertsCollection').collection('collection')
+        const orderCollection = client.db('orderCollection').collection('collection')
+        const userCollection = client.db('userCollection').collection('collection')
+        const reviewCollection = client.db('reviewCollection').collection('collection')
 
 
         app.get('/product', async (req, res) => {
@@ -30,6 +33,14 @@ async function run(){
             const products = await cursor.toArray();
             res.send(products);
         });
+        
+                //------------ API to get product by id--------
+                
+                app.get("/product/:id", async (req, res) => {
+                    const id = req.params.id;
+                    const tool = await productCollection.findOne({ _id: ObjectId(id) });
+                    res.send(tool);
+                });
 
     }
     finally{
