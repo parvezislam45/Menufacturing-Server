@@ -22,7 +22,7 @@ async function run(){
     try{
         await client.connect();
         const productCollection = client.db('pertsCollection').collection('collection')
-        const orderCollection = client.db('orderCollection').collection('collection')
+        const orderCollection = client.db('pertsCollection').collection('orderCollection')
         const userCollection = client.db('userCollection').collection('collection')
         const reviewCollection = client.db('reviewCollection').collection('collection')
 
@@ -33,14 +33,22 @@ async function run(){
             const products = await cursor.toArray();
             res.send(products);
         });
-        
-                //------------ API to get product by id--------
-                
-                app.get("/product/:id", async (req, res) => {
-                    const id = req.params.id;
-                    const tool = await productCollection.findOne({ _id: ObjectId(id) });
-                    res.send(tool);
-                });
+
+        // ------------ Use Info -----------------
+        app.get('/order/:email',async (req,res) =>{
+            const email = req.params.email;
+            const query = {email: email};
+            const orders = await orderCollection.find(query).toArray();
+            res.send(orders);
+        })
+
+                // -------- Order Data---------
+
+                app.post('/order',async (req, res)=>{
+                    const orders = req.body;
+                    const result = await orderCollection.insertOne(orders);
+                    res.send(result);
+                })
 
     }
     finally{
