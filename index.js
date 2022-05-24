@@ -23,7 +23,7 @@ async function run(){
         await client.connect();
         const productCollection = client.db('pertsCollection').collection('collection')
         const orderCollection = client.db('pertsCollection').collection('orderCollection')
-        const userCollection = client.db('userCollection').collection('collection')
+        const userCollection = client.db('pertsCollection').collection('user')
         const reviewCollection = client.db('reviewCollection').collection('collection')
 
 
@@ -34,6 +34,28 @@ async function run(){
             res.send(products);
         });
 
+        // ----------- All User -----------------
+
+        app.get('/user',async (req,res)=>{
+            const users = await orderCollection.find().toArray()
+            res.send(users)
+        })
+
+        // ------------------ Upsert User----------------------
+
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+              $set: user,
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            // const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send(result);
+          })
+
         // ------------ Use Info -----------------
         app.get('/order/:email',async (req,res) =>{
             const email = req.params.email;
@@ -41,6 +63,25 @@ async function run(){
             const orders = await orderCollection.find(query).toArray();
             res.send(orders);
         })
+
+
+        // ---------------- Update Quantity ----------------------
+        app.put('/product/:id', async (req, res) => {
+            const id = req.params.id
+            const updateProduct = req.body
+            console.log(updateProduct);
+            const query = { _id: ObjectId(id) }
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    availableQuantity: updateProduct.newQuantity
+                }
+            }
+
+            const result = await productCollection.updateOne(query, updateDoc, options)
+            res.send(result)
+        })
+
 
                 // -------- Order Data---------
 
