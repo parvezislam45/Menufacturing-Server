@@ -54,32 +54,25 @@ async function run() {
       res.send(products);
     });
 
-    app.get("/product/:id", async (req,res) =>{
+    app.get("/product/:id", async (req, res) => {
       const id = req.params.id;
       const result = await productCollection.findOne({ _id: ObjectId(id) });
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     // ----------- All User -----------------
 
-    app.get("/user",verifyJWT, async (req, res) => {
+    app.get("/user", verifyJWT, async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
 
-    //API to add a order
-    // app.post("/orders", async (req, res) => {
-    //   const order = req.body;
-    //   const result = await orderCollection.insertOne(order);
-    //   res.send(result);
-    // });
-
-    app.get('/admin/:email', async(req, res) =>{
+    app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
-      const user = await userCollection.findOne({email: email});
-      const isAdmin = user.role === 'admin';
-      res.send({admin: isAdmin})
-    })
+      const user = await userCollection.findOne({ email: email });
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
+    });
 
     app.put("/user/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
@@ -117,36 +110,33 @@ async function run() {
       );
       res.send({ result, token });
     });
-
-    // ------------ Use Info -----------------
-    // app.get("/order/:email", async (req, res) => {
-    //   const patient = req.query.patient;
-    //   const decodedEmail = req.decoded.email;
-    //   if (patient === decodedEmail) {
-    //     const query = { patient: patient };
-    //     const bookings = await orderCollection.find(query).toArray();
-    //     return res.send(bookings);
-    //   } else {
-    //     return res.status(403).send({ message: "forbidden access" });
-    //   }
-    // });
-
-    // // ---------------- Update Quantity ----------------------
-    // app.put('/product/:id', async (req, res) => {
-    //     const id = req.params.id
-    //     const updateProduct = req.body
-    //     console.log(updateProduct);
-    //     const query = { _id: ObjectId(id) }
-    //     const options = { upsert: true };
-    //     const updateDoc = {
-    //         $set: {
-    //             availableQuantity: updateProduct.newQuantity
-    //         }
-    //     }
-
-    //     const result = await productCollection.updateOne(query, updateDoc, options)
-    //     res.send(result)
-    // })
+    //API to update a user
+    app.put("/update/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      console.log("user", user);
+      const query = {
+        email: email,
+      };
+      const options = {
+        upsert: true,
+      };
+      const updatedDoc = {
+        $set: {
+          displayName: user?.displayName,
+          institution: user?.institution,
+          phoneNumber: user?.phoneNumber,
+          address: user?.address,
+          dateOfBirth: user?.dateOfBirth,
+        },
+      };
+      const result = await usersCollection.updateOne(
+        query,
+        updatedDoc,
+        options
+      );
+      res.send(result);
+    });
 
     // -------- Order Data---------
 
