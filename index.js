@@ -138,13 +138,14 @@ async function run() {
       res.send(result);
     });
 
-    // -------- Order Data---------
-
-    app.post("/order", async (req, res) => {
-      const orders = req.body;
-      const result = await orderCollection.insertOne(orders);
+     //API to remove admin
+     app.delete("/user/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const result = await adminsCollection.deleteOne(filter);
       res.send(result);
-    });
+    }
+    );
   } finally {
   }
 }
