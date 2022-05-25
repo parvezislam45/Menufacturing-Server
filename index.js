@@ -110,59 +110,10 @@ async function run() {
       );
       res.send({ result, token });
     });
-    //API to update a user
-    app.put("/update/user/:email", async (req, res) => {
-      const email = req.params.email;
-      const user = req.body;
-      console.log("user", user);
-      const query = {
-        email: email,
-      };
-      const options = {
-        upsert: true,
-      };
-      const updatedDoc = {
-        $set: {
-          displayName: user?.displayName,
-          institution: user?.institution,
-          phoneNumber: user?.phoneNumber,
-          address: user?.address,
-          dateOfBirth: user?.dateOfBirth,
-        },
-      };
-      const result = await usersCollection.updateOne(
-        query,
-        updatedDoc,
-        options
-      );
-      res.send(result);
-    });
 
-     //API to remove admin
-     app.delete("/user/admin/:email", async (req, res) => {
-      const email = req.params.email;
-      const filter = { email: email };
-      const result = await adminsCollection.deleteOne(filter);
-      res.send(result);
-    }
-    );
 
-     //API to update a order
-     app.put("/orders/:id", async (req, res) => {
-      const orderId = req.params.id;
-      const order = req.body; 
-      console.log("order", order);
-      const query = { _id: ObjectId(orderId) };
-      const options = { upsert: true };
-      const updatedOrder = await ordersCollection.updateOne(
-        query,
-        {
-          $set: order,
-        },
-        options
-      );
-      res.send(updatedOrder);
-    });
+    // -----------------order post-------------
+    
 
      //API to get orders by user email
      app.get("/orders/:email", async (req, res) => {
@@ -172,21 +123,18 @@ async function run() {
         .toArray();
       res.send(orders);
     });
-    //API to get orders with multiple query parameters
-    app.get("/orders/:email/:isdelivered", async (req, res) => {
-      const email = req.params.email;
-      const isdelivered = req.params.isdelivered;
-      const orders = await ordersCollection
-        .find({ userEmail: email, isDelivered: true })
-        .toArray();
-      res.send(orders);
-    });
+    
 
     //API to add a order
     app.post("/orders", async (req, res) => {
       const order = req.body;
-      const result = await ordersCollection.insertOne(order);
+      const result = await orderCollection.insertOne(order);
       res.send(result);
+    });
+
+    app.get("/orders", async (req, res) => {
+      const users = await orderCollection.find().toArray();
+      res.send(users);
     });
 
     //API to delete a order
