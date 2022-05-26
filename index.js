@@ -36,13 +36,17 @@ function verifyJWT(req, res, next) {
 async function run() {
   try {
     await client.connect();
-    const productCollection = client.db("pertsCollection").collection("collection");
-    const orderCollection = client.db("pertsCollection") .collection("orderCollection");
+    const productCollection = client
+      .db("pertsCollection")
+      .collection("collection");
+    const orderCollection = client
+      .db("pertsCollection")
+      .collection("orderCollection");
     const userCollection = client.db("pertsCollection").collection("user");
-    const reviewCollection = client.db("reviewCollection") .collection("review");
-    const profileCollection = client.db("reviewCollection") .collection("info");
- 
-// ----------------------- All Product -----------------
+    const reviewCollection = client.db("reviewCollection").collection("review");
+    const profileCollection = client.db("reviewCollection").collection("info");
+
+    // ----------------------- All Product -----------------
 
     app.get("/product", async (req, res) => {
       const query = {};
@@ -56,10 +60,23 @@ async function run() {
       const result = await productCollection.findOne({ _id: ObjectId(id) });
       res.send(result);
     });
+    app.patch('/product/:id',async(req,res)=>{
+      const id = req.params.id;
+      const quantity=req.body
+      const filter = {_id: ObjectId(id)}
+      console.log(filter)
+      const updateDoc = {
+        $set:{
+          stock:quantity.restQuantity
+        }
+      }
+      const updateQuantity=await productCollection.updateOne(filter,updateDoc);
+      res.send(updateQuantity);
+    })
 
     // ----------- All User -----------------
 
-    app.get("/user",verifyJWT,async (req, res) => {
+    app.get("/user", verifyJWT, async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
@@ -71,7 +88,7 @@ async function run() {
       res.send({ admin: isAdmin });
     });
 
-    app.put("/user/admin/:email",verifyJWT, async (req, res) => {
+    app.put("/user/admin/:email", verifyJWT, async (req, res) => {
       const email = req.params.email;
       const requester = req.decoded.email;
       const requesterAccount = await userCollection.findOne({
@@ -84,8 +101,7 @@ async function run() {
         };
         const result = await userCollection.updateOne(filter, updateDoc);
         res.send(result);
-      } 
-      else {
+      } else {
         res.status(403).send({ message: "forbidden" });
       }
     });
@@ -112,6 +128,13 @@ async function run() {
     //API to add a order
     app.post("/orders", async (req, res) => {
       const order = req.body;
+      const productId = order.orderId;
+      const product = await productCollection .findOne({
+        _id: ObjectId(productId),
+      });
+      let qtn = parseInt(product?.quantity) - parseInt(order?.quantity);
+
+      await productCollection.updateOne({ _id: ObjectId(productId) }, { $set: { quantity: qtn } });
       const result = await orderCollection.insertOne(order);
       res.send(result);
     });
@@ -134,7 +157,6 @@ async function run() {
       res.send(review);
     });
 
-
     // -------------------Update User Info--------------------
 
     app.put("/info", async (req, res) => {
@@ -145,21 +167,19 @@ async function run() {
       const updateDoc = {
         $set: user,
       };
-      const result = await profileCollection.updateOne(filter, updateDoc, options);
+      const result = await profileCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
 
-
     app.get("/info/:email", async (req, res) => {
       const email = req.params.email;
-      const info = await profileCollection.findOne({email:email});
-      console.log(email)
-      console.log(info)
+      const info = await profileCollection.findOne({ email: email });
       res.send(info);
-  
     });
-
-
   } finally {
   }
 }
