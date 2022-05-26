@@ -36,16 +36,12 @@ function verifyJWT(req, res, next) {
 async function run() {
   try {
     await client.connect();
-    const productCollection = client
-      .db("pertsCollection")
-      .collection("collection");
-    const orderCollection = client
-      .db("pertsCollection")
-      .collection("orderCollection");
+    const productCollection = client.db("pertsCollection").collection("collection");
+    const orderCollection = client.db("pertsCollection") .collection("orderCollection");
     const userCollection = client.db("pertsCollection").collection("user");
-    const reviewCollection = client
-      .db("reviewCollection")
-      .collection("collection");
+    const reviewCollection = client.db("reviewCollection") .collection("review");
+ 
+// ----------------------- All Product -----------------
 
     app.get("/product", async (req, res) => {
       const query = {};
@@ -62,7 +58,7 @@ async function run() {
 
     // ----------- All User -----------------
 
-    app.get("/user", verifyJWT, async (req, res) => {
+    app.get("/user",async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
@@ -74,7 +70,7 @@ async function run() {
       res.send({ admin: isAdmin });
     });
 
-    app.put("/user/admin/:email", verifyJWT, async (req, res) => {
+    app.put("/user/admin/:email", async (req, res) => {
       const email = req.params.email;
       const requester = req.decoded.email;
       const requesterAccount = await userCollection.findOne({
@@ -111,20 +107,6 @@ async function run() {
       res.send({ result, token });
     });
 
-
-    // -----------------order post-------------
-    
-
-     //API to get orders by user email
-     app.get("/orders/:email", async (req, res) => {
-      const email = req.params.email;
-      const orders = await ordersCollection
-        .find({ userEmail: email })
-        .toArray();
-      res.send(orders);
-    });
-    
-
     //API to add a order
     app.post("/orders", async (req, res) => {
       const order = req.body;
@@ -137,12 +119,17 @@ async function run() {
       res.send(users);
     });
 
-    //API to delete a order
-    app.delete("/orders/:id", async (req, res) => {
-      const id = req.params.id;
-      console.log("id", id);
-      const result = await ordersCollection.deleteOne({ _id: ObjectId(id) });
+    // -------------- Review Collection ---------------
+
+    app.post("/review", async (req, res) => {
+      const order = req.body;
+      const result = await reviewCollection.insertOne(order);
       res.send(result);
+    });
+
+    app.get("/review", async (req, res) => {
+      const review = await reviewCollection.find().toArray();
+      res.send(review);
     });
 
 
