@@ -40,6 +40,7 @@ async function run() {
     const orderCollection = client.db("pertsCollection") .collection("orderCollection");
     const userCollection = client.db("pertsCollection").collection("user");
     const reviewCollection = client.db("reviewCollection") .collection("review");
+    const profileCollection = client.db("reviewCollection") .collection("info");
  
 // ----------------------- All Product -----------------
 
@@ -58,7 +59,7 @@ async function run() {
 
     // ----------- All User -----------------
 
-    app.get("/user",async (req, res) => {
+    app.get("/user",verifyJWT,async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
@@ -70,7 +71,7 @@ async function run() {
       res.send({ admin: isAdmin });
     });
 
-    app.put("/user/admin/:email", async (req, res) => {
+    app.put("/user/admin/:email",verifyJWT, async (req, res) => {
       const email = req.params.email;
       const requester = req.decoded.email;
       const requesterAccount = await userCollection.findOne({
@@ -83,7 +84,8 @@ async function run() {
         };
         const result = await userCollection.updateOne(filter, updateDoc);
         res.send(result);
-      } else {
+      } 
+      else {
         res.status(403).send({ message: "forbidden" });
       }
     });
@@ -130,6 +132,31 @@ async function run() {
     app.get("/review", async (req, res) => {
       const review = await reviewCollection.find().toArray();
       res.send(review);
+    });
+
+
+    // -------------------Update User Info--------------------
+
+    app.put("/info", async (req, res) => {
+      const email = req.params.email;
+      const user = req.body;
+      const filter = { email: email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: user,
+      };
+      const result = await profileCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
+
+
+    app.get("/info/:email", async (req, res) => {
+      const email = req.params.email;
+      const info = await profileCollection.findOne({email:email});
+      console.log(email)
+      console.log(info)
+      res.send(info);
+  
     });
 
 
