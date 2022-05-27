@@ -64,7 +64,6 @@ async function run() {
       const id = req.params.id;
       const quantity=req.body
       const filter = {_id: ObjectId(id)}
-      console.log(filter)
       const updateDoc = {
         $set:{
           stock:quantity.restQuantity
@@ -141,6 +140,12 @@ async function run() {
 
     app.get("/orders", async (req, res) => {
       const users = await orderCollection.find().toArray();
+      res.send(users);
+    });
+    app.get("/orders/user/:email", async (req, res) => {
+      const email=req.params.email
+      const query={email:email}
+      const users = await orderCollection.find(query).toArray();
       res.send(users);
     });
 
