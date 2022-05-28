@@ -82,7 +82,7 @@ async function run() {
 
     // ----------- All User -----------------
 
-    app.get("/user", verifyJWT, async (req, res) => {
+    app.get("/user", async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
@@ -94,7 +94,7 @@ async function run() {
       res.send({ admin: isAdmin });
     });
 
-    app.put("/user/admin/:email", verifyJWT, async (req, res) => {
+    app.put("/user/admin/:email", async (req, res) => {
       const email = req.params.email;
       const requester = req.decoded.email;
       const requesterAccount = await userCollection.findOne({
