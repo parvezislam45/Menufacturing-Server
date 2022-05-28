@@ -1,11 +1,12 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 7000;
-
+console.log(process.env.STRIPE_SECRET_KEY)
 // --------MiddleWire------------
 app.use(cors());
 app.use(express.json());
@@ -51,7 +52,7 @@ async function run() {
     app.get("/product", async (req, res) => {
       const query = {};
       const cursor = productCollection.find(query);
-      const products = await cursor.toArray();
+      const products = await cursor.sort({ _id: -1 }).limit(6).toArray();
       res.send(products);
     });
 
@@ -72,6 +73,12 @@ async function run() {
       const updateQuantity=await productCollection.updateOne(filter,updateDoc);
       res.send(updateQuantity);
     })
+
+    app.post('/product',async (req,res) =>{
+      const newProduct = req.body;
+      const result = await productCollection.insertOne(newProduct);
+      res.send(result);
+  })
 
     // ----------- All User -----------------
 
@@ -142,12 +149,32 @@ async function run() {
       const users = await orderCollection.find().toArray();
       res.send(users);
     });
+    app.get("/orders/:id", async (req,res)=>{
+      const id = req.params.id;
+      const query = {_id: ObjectId(id)}
+      const orders = await orderCollection.findOne(query);
+      res.send(orders)
+    })
     app.get("/orders/user/:email", async (req, res) => {
       const email=req.params.email
       const query={email:email}
       const users = await orderCollection.find(query).toArray();
       res.send(users);
     });
+
+    app.patch('/orders/:id',async (req,res)=>{
+      const id = req.params.id;
+      const payment = req.body;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = {
+          $set: {
+              paid: true,
+              transactionId: payment.transactionId
+          }
+      }
+      const updatedBooking = await orderCollection.updateOne(filter, updatedDoc);
+      res.send(updatedBooking);
+    })
 
     // -------------- Review Collection ---------------
 
@@ -185,6 +212,25 @@ async function run() {
       const info = await profileCollection.findOne({ email: email });
       res.send(info);
     });
+
+    // -----------------------Paymnt-------------------
+
+    app.post('/create-payment-intent' ,async (req, res) =>{
+      const service = req.body;
+      const price = service.price;
+      if(price){ const amount = price*100;
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount : amount,
+          currency: 'usd',
+          payment_method_types:['card']
+        });
+        res.send({clientSecret: paymentIntent.client_secret})}
+        else{
+          res.send({clientSecret: ''})
+        }
+     
+    });
+
   } finally {
   }
 }
