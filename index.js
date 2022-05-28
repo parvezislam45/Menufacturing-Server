@@ -178,6 +178,16 @@ async function run() {
       res.send(updatedBooking);
     })
 
+
+    // ---------------- Delate Order ------------------
+
+    app.delete('/orders/:id',async (req,res)=>{
+      const id = req.params.id;
+      const query = {_id: ObjectId(id)};
+      const result = await orderCollection.deleteOne(query);
+      res.send(result);
+  })
+
     // -------------- Review Collection ---------------
 
     app.post("/review", async (req, res) => {
