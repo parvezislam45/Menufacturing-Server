@@ -209,6 +209,7 @@ async function run() {
 
     app.get("/info/:email", async (req, res) => {
       const email = req.params.email;
+      console.log(email)
       const info = await profileCollection.findOne({ email: email });
       res.send(info);
     });
