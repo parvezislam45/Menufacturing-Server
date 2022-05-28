@@ -26,12 +26,14 @@ function verifyJWT(req, res, next) {
   }
   const token = authHeader.split(" ")[1];
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, function (err, decoded) {
-    if (err) {
-      return res.status(403).send({ message: "Forbidden access" });
-    }
+    // if (err) {
+    //   return res.status(403).send({ message: "Forbidden access" });
+    // }
     req.decoded = decoded;
     next();
+    console.log(authHeader)
   });
+  
 }
 
 async function run() {
@@ -82,7 +84,7 @@ async function run() {
 
     // ----------- All User -----------------
 
-    app.get("/user", async (req, res) => {
+    app.get("/user",verifyJWT, async (req, res) => {
       const users = await userCollection.find().toArray();
       res.send(users);
     });
